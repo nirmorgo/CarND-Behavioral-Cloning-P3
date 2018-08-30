@@ -18,11 +18,11 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./examples/placeholder.png "Model Visualization"
-[image2]: ./examples/placeholder.png "Grayscaling"
-[image3]: ./examples/placeholder_small.png "Recovery Image"
-[image4]: ./examples/placeholder_small.png "Recovery Image"
-[image5]: ./examples/placeholder_small.png "Recovery Image"
+[image1]: ./examples/center.jpg "center driving"
+[image2]: ./examples/left_recovery.jpg "left recovery"
+[image3]: ./examples/right_recovery.jpg "right recovery"
+[image4]: ./examples/before_flip.jpg "before flip"
+[image5]: ./examples/after_flip.jpg "after flip"
 [image6]: ./examples/placeholder_small.png "Normal Image"
 [image7]: ./examples/placeholder_small.png "Flipped Image"
 
@@ -36,6 +36,7 @@ The goals / steps of this project are the following:
 
 My project includes the following files:
 * model.py containing the script to create and train the model
+* data_handling.py contains functions for loading and augmenting the data
 * drive.py for driving the car in autonomous mode
 * model.h5 containing a trained convolution neural network 
 * writeup_report.md or writeup_report.pdf summarizing the results
@@ -54,23 +55,25 @@ The model.py file contains the code for training and saving the convolution neur
 
 #### 1. An appropriate model architecture has been employed
 
-My model consists of a convolution neural network with 3x3 filter sizes and depths between 32 and 128 (model.py lines 18-24) 
+My model consists of 3 convolutional layers with 3X3 filters and 32 output channels and each convolution has a RELU activation and is followed by a 2X2 max pooling layer (code lines 14-19).
 
-The model includes RELU layers to introduce nonlinearity (code line 20), and the data is normalized in the model using a Keras lambda layer (code line 18). 
+After the third convolution we flatten the output (code line 20) and use 2 fully connected layers with 128 and 64 outputs, with RELU activations, and than another fully connected layer with no activation, that we have the final model output (lines 21-25).
+
+As a loss function for the model, i have used MSE since this is not a classification problem, but a regression problem (with a single output)
 
 #### 2. Attempts to reduce overfitting in the model
 
-The model contains dropout layers in order to reduce overfitting (model.py lines 21). 
+The model contains dropout layers after the fully connected layers in order to reduce overfitting (model.py lines 22 and 24). 
 
-The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 10-16). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
+The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 29). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
 
 #### 3. Model parameter tuning
 
-The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 25).
+The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 28).
 
 #### 4. Appropriate training data
 
-Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road ... 
+Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road doing turns and driving through all the different terain types.
 
 For details about how I created the training data, see the next section. 
 
@@ -78,52 +81,52 @@ For details about how I created the training data, see the next section.
 
 #### 1. Solution Design Approach
 
-The overall strategy for deriving a model architecture was to ...
+The overall strategy for deriving a model architecture was to use convolutions in order to extract features from the road images, and use these features in order to calculate a single output for that determines the angle that the vehicle need to use. the net was trained as a regrresor
 
-My first step was to use a convolution neural network model similar to the ... I thought this model might be appropriate because ...
+My first step was to use a convolution neural network model similar to the LeNet architecture. I thought this model might be appropriate because it is simple, and robust. 
 
-In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting. 
+In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. 
 
-To combat the overfitting, I modified the model so that ...
+To combat the overfitting, I add two dropout layers after the fully connected layers.
 
-Then I ... 
-
-The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track... to improve the driving behavior in these cases, I ....
+The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track... to improve the driving behavior in these cases, I collected additional data for training and used data augmentation.
 
 At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road.
 
 #### 2. Final Model Architecture
 
-The final model architecture (model.py lines 18-24) consisted of a convolution neural network with the following layers and layer sizes ...
+My model consists of 3 convolutional layers with 3X3 filters and 32 output channels and each convolution has a RELU activation and is followed by a 2X2 max pooling layer (code lines 14-19).
 
-Here is a visualization of the architecture (note: visualizing the architecture is optional according to the project rubric)
+After the third convolution we flatten the output (code line 20) and use 2 fully connected layers with 128 and 64 outputs, with RELU activations, and than another fully connected layer with no activation, that we have the final model output (lines 21-25).
 
-![alt text][image1]
+As a loss function for the model, i have used MSE since this is not a classification problem, but a regression problem (with a single output)
+
+The input data is cropped from top and bottom in order to focus only on the interesting part of the image, and then it is normalized between 0-1 (lines 12-13)
 
 #### 3. Creation of the Training Set & Training Process
 
-To capture good driving behavior, I first recorded two laps on track one using center lane driving. Here is an example image of center lane driving:
+To capture good driving behavior, I first recorded three laps on track one using center lane driving. Here is an example image of center lane driving:
+
+![alt text][image1]
+
+I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to correct itself when needed:
 
 ![alt text][image2]
-
-I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to .... These images show what a recovery looks like starting from ... :
-
 ![alt text][image3]
+
+
+To augment the data sat, I also flipped images and angles thinking that this would give more veriety to my dataset For example, here is an image that has then been flipped:
+
 ![alt text][image4]
 ![alt text][image5]
 
-Then I repeated this process on track two in order to get more data points.
+I also drove in the opposite direction of the road in order to have more driving scenarios covered in my dataset.
 
-To augment the data sat, I also flipped images and angles thinking that this would ... For example, here is an image that has then been flipped:
+To utilize the left and right cameras, i added them to the dataset as additional data points with corrected steering angle (i used 0.2 as a correction factor). This part of the code is described in data_handling.py
 
-![alt text][image6]
-![alt text][image7]
-
-Etc ....
-
-After the collection process, I had X number of data points. I then preprocessed this data by ...
+After the collection process, I had ~70k number of data points. I then preprocessed this data by cropping the 55 pixels from the top and 25 pixels from the bottom and normalizing the images between 0 to 1.
 
 
-I finally randomly shuffled the data set and put Y% of the data into a validation set. 
+I finally randomly shuffled the data set and put 20% of the data into a validation set. 
 
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was Z as evidenced by ... I used an adam optimizer so that manually training the learning rate wasn't necessary.
+I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was 5 as evidenced by the fact that the validation set loss value stopped improving. I used an adam optimizer so that manually training the learning rate wasn't necessary.
